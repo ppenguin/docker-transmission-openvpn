@@ -1,7 +1,9 @@
 FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG TBT_VERSION=4.0.4
+ARG TBT_VERSION=4.0.6
+
+COPY ./longfilenames.patch /tmp/
 
 RUN set -ex; \
     apt-get update; \
@@ -36,6 +38,8 @@ RUN set -ex; \
 #This will build the transmission image to re-use in our container
 RUN mkdir -p /home/transmission4/ && cd /home/transmission4/ \
     && curl -L -o transmission4.tar.xz "https://github.com/transmission/transmission/releases/download/${TBT_VERSION}/transmission-${TBT_VERSION}.tar.xz" \
-    && tar -xf transmission4.tar.xz && cd "transmission-${TBT_VERSION}" && mkdir build && cd build \
+    && tar -xf transmission4.tar.xz && cd "transmission-${TBT_VERSION}" \
+    && patch -p1 < /tmp/longfilenames.patch \
+    && mkdir build && cd build \
     && cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .. && make && make install \
     && checkinstall -y -D --pkgname transmission  --pakdir /var/tmp --pkgversion=${TBT_VERSION}

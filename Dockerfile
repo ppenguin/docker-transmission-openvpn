@@ -42,7 +42,7 @@ RUN set -ex; \
       libssl-dev \
       natpmpc
 
-FROM haugene/transmission-builder:4.0.5 as TransmissionBuilder
+FROM ppenguin/transmission-builder:4.0.6-lfn as TransmissionBuilder
 
 FROM base
 
@@ -52,21 +52,17 @@ VOLUME /config
 COPY --from=TransmissionUIs /opt/transmission-ui /opt/transmission-ui
 COPY --from=TransmissionBuilder /var/tmp/*.deb /var/tmp/
 
-ARG TBT_VERSION=4.0.5
+ARG TBT_VERSION=4.0.6
 ARG DEBIAN_FRONTEND=noninteractive
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+SHELL ["/usr/bin/bash", "-o", "pipefail", "-c"]
 RUN echo "installing Transmission" && set -x \
-    && if [[ ${TBT_VERSION} =~ ^4 ]]; then \
-      ls -alh /var/tmp/*.deb ;\
+    && ls -alh /var/tmp/*.deb ;\
       debfile=$(compgen -G /var/tmp/transmission_*_$(dpkg --print-architecture).deb); \
       if [[ -n ${debfile} ]]; then \
       echo "Installing transmission ${TBT_VERSION}" && dpkg -i ${debfile} ;\
       else echo "No /var/tmp/transmission_*_$(dpkg --print-architecture).deb found. Exiting" \
-      ; exit ; fi ; \
-    else echo "Installing transmission from repository" \
-    && export TBT_VERSION=3.00 \
-    && apt-get install -y --no-install-recommends transmission-daemon transmission-cli; fi
+      ; exit ; fi
 
 RUN apt-get update && apt-get install -y \
     dumb-init openvpn privoxy \
